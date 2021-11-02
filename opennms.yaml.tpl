@@ -148,9 +148,6 @@ write_files:
     curl -1sLf 'https://packages.opennms.com/public/develop/setup.rpm.sh' | sudo -E bash
     dnf install -y opennms-core opennms-webapp-jetty opennms-webapp-hawtio opennms-helm
 
-    echo "OpenNMS: Compiling Plugins"
-    runuser -u opennms -- /opt/opennms/bin/setup-plugins.sh
-
     echo "OpenNMS: Configuring PostgreSQL"
     if [ "${pg_local}" == "true" ]; then
       dnf install -y postgresql-server
@@ -181,6 +178,9 @@ write_files:
     RUNAS=opennms /opt/opennms/bin/fix-permissions
     runuser -u opennms -- /opt/opennms/bin/runjava -s
     runuser -u opennms -- /opt/opennms/bin/install -dis
+
+    echo "OpenNMS: Compiling Plugins"
+    runuser -u opennms -- /opt/opennms/bin/setup-plugins.sh
 
     echo "Starting services"
     systemctl --now enable nginx
