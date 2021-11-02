@@ -1,7 +1,7 @@
 # Author: Alejandro Galue <agalue@opennms.org>
 
 resource "azurerm_postgresql_server" "opennms" {
-  name                = "${var.name_prefix}-onms"
+  name                = "${var.name_prefix}-pg"
   location            = var.location
   resource_group_name = local.resource_group
   tags                = local.required_tags
@@ -21,7 +21,7 @@ resource "azurerm_postgresql_server" "opennms" {
 }
 
 resource "azurerm_private_endpoint" "postgres" {
-  name                = "${var.name_prefix}-onms-pgpe"
+  name                = "${var.name_prefix}-pgpe"
   location            = var.location
   resource_group_name = local.resource_group
   subnet_id           = azurerm_subnet.main.id

@@ -1,7 +1,7 @@
 # Author: Alejandro Galue <agalue@opennms.org>
 
 locals {
-  onms_vm = "${var.name_prefix}-onmsqa"
+  onms_vm = "${var.name_prefix}-onms"
 }
 
 resource "azurerm_network_security_group" "opennms" {
