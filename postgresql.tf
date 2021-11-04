@@ -32,7 +32,7 @@ resource "azurerm_private_endpoint" "postgres" {
   private_service_connection {
     name                           = "onms-postgresql-connection"
     is_manual_connection           = false
-    private_connection_resource_id = azurerm_postgresql_server.opennms.id
+    private_connection_resource_id = azurerm_postgresql_server.opennms[0].id
     subresource_names              = ["postgresqlServer"]
   }
 }

@@ -2,8 +2,8 @@
 
 locals {
   onms_vm   = "${var.name_prefix}-onms"
-  pg_ipaddr = var.pg_local ? "127.0.0.1" : azurerm_private_endpoint.postgres.private_service_connection[0].private_ip_address
-  pg_user   = var.pg_local ? "postgres" : "postgres@${azurerm_postgresql_server.opennms.name}"
+  pg_ipaddr = var.pg_local ? "127.0.0.1" : azurerm_private_endpoint.postgres[0].private_service_connection[0].private_ip_address
+  pg_user   = var.pg_local ? "postgres" : "postgres@${azurerm_postgresql_server.opennms[0].name}"
 }
 
 resource "azurerm_network_security_group" "opennms" {
