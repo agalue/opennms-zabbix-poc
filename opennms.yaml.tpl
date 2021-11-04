@@ -92,32 +92,30 @@ write_files:
     ADDITIONAL_MANAGER_OPTIONS="$ADDITIONAL_MANAGER_OPTIONS -XX:-UseBiasedLocking"
 
 - owner: root:root
-  path: /opt/opennms/deploy/features.xml
+  path: /opt/opennms/etc/featuresBoot.d/cortex.boot
+  content: |
+    opennms-plugins-cortex-tss
+
+- owner: root:root
+  path: /opt/opennms/deploy/zabbix.xml
   content: |
     <?xml version="1.0" encoding="UTF-8"?>
     <features name="opennms-time-series" xmlns="http://karaf.apache.org/xmlns/features/v1.4.0"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.4.0 http://karaf.apache.org/xmlns/features/v1.4.0">
-      <repository>mvn:org.opennms.plugins.timeseries/cortex-karaf-features/1.0.0-SNAPSHOT/xml</repository>
       <repository>mvn:org.opennms.plugins.zabbix/karaf-features/1.0.0-SNAPSHOT/xml</repository>
       <feature name="autostart-zabbix" description="Zabbix Auto-Start" version="1.0.0" start-level="200" install="auto">
-        <feature>opennms-plugins-cortex-tss</feature>
         <feature>opennms-plugins-zabbix</feature>
       </feature>
     </features>
 
 - owner: root:root
   permissions: '0755'
-  path: /opt/opennms/bin/setup-plugins.sh
+  path: /opt/opennms/bin/compile-zabbix-plugin.sh
   content: |
     #!/bin/bash
 
     cd /opt/opennms
-    git clone https://github.com/OpenNMS/opennms-cortex-tss-plugin.git cortex
-    cd cortex
-    mvn install -DskipTests
-    cd ..
-
     git clone https://github.com/OpenNMS/opennms-zabbix-plugin.git zabbix
     cd zabbix
     mvn install -DskipTests
@@ -141,7 +139,9 @@ write_files:
 
     echo "Installing and configuring Cortex"
     dnf install -y https://github.com/cortexproject/cortex/releases/download/v1.10.0/cortex-1.10.0_amd64.rpm
-    
+    URL=https://github.com/OpenNMS/opennms-cortex-tss-plugin/releases/download/v1.0.0/opennms-cortex-tss-plugin.kar
+    curl $URL --output /opt/opennms/deploy/opennms-cortex-tss-plugin.kar
+
     echo "Installing OpenNMS and Helm"
     dnf install -y https://yum.opennms.org/repofiles/opennms-repo-stable-rhel8.noarch.rpm
     dnf install -y jicmp jicmp6 jrrd2
@@ -154,11 +154,10 @@ write_files:
       /usr/bin/postgresql-setup --initdb --unit postgresql
       sed -r -i "/^(local|host)/s/(peer|ident)/trust/g" /var/lib/pgsql/data/pg_hba.conf
       systemctl --now enable postgresql
-    else
-      sed -r -i 's/localhost/${pg_ipaddr}/' /opt/opennms/etc/opennms-datasources.xml
-      sed -r -i 's/user-name="postgres"/user-name="${pg_user}"/' /opt/opennms/etc/opennms-datasources.xml
-      sed -r -i 's/password=""/password="${pg_passwd}"/' /opt/opennms/etc/opennms-datasources.xml
     fi
+    sed -r -i 's/localhost/${pg_ipaddr}/' /opt/opennms/etc/opennms-datasources.xml
+    sed -r -i 's/user-name="postgres"/user-name="${pg_user}"/' /opt/opennms/etc/opennms-datasources.xml
+    sed -r -i 's/password=""/password="${pg_passwd}"/' /opt/opennms/etc/opennms-datasources.xml
 
     echo "OpenNMS: Configuring JMX"
     num_cores=$(cat /proc/cpuinfo | grep "^processor" | wc -l)
@@ -179,8 +178,8 @@ write_files:
     runuser -u opennms -- /opt/opennms/bin/runjava -s
     runuser -u opennms -- /opt/opennms/bin/install -dis
 
-    echo "OpenNMS: Compiling Plugins"
-    runuser -u opennms -- /opt/opennms/bin/setup-plugins.sh
+    echo "OpenNMS: Compiling Zabbix Plugin"
+    runuser -u opennms -- /opt/opennms/bin/compile-zabbix-plugin.sh
 
     echo "Starting services"
     systemctl --now enable nginx

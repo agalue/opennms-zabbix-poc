@@ -1,6 +1,7 @@
 # Author: Alejandro Galue <agalue@opennms.org>
 
 resource "azurerm_postgresql_server" "opennms" {
+  count               = var.pg_local ? 0 : 1
   name                = "${var.name_prefix}-pg"
   location            = var.location
   resource_group_name = local.resource_group
@@ -21,6 +22,7 @@ resource "azurerm_postgresql_server" "opennms" {
 }
 
 resource "azurerm_private_endpoint" "postgres" {
+  count               = var.pg_local ? 0 : 1
   name                = "${var.name_prefix}-pgpe"
   location            = var.location
   resource_group_name = local.resource_group

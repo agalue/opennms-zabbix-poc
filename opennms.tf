@@ -1,7 +1,9 @@
 # Author: Alejandro Galue <agalue@opennms.org>
 
 locals {
-  onms_vm = "${var.name_prefix}-onms"
+  onms_vm   = "${var.name_prefix}-onms"
+  pg_ipaddr = var.pg_local ? "127.0.0.1" : azurerm_private_endpoint.postgres.private_service_connection[0].private_ip_address
+  pg_user   = var.pg_local ? "postgres" : "postgres@${azurerm_postgresql_server.opennms.name}"
 }
 
 resource "azurerm_network_security_group" "opennms" {
@@ -86,9 +88,8 @@ data "template_file" "opennms" {
     eh_bootstrap = "${azurerm_eventhub_namespace.opennms.name}.servicebus.windows.net:9093"
     eh_connstr   = azurerm_eventhub_namespace.opennms.default_primary_connection_string
     pg_local     = var.pg_local
-    # If pg_local is true, the rest is ignored (for testing purposes)
-    pg_ipaddr    = azurerm_private_endpoint.postgres.private_service_connection[0].private_ip_address
-    pg_user      = "postgres@${azurerm_postgresql_server.opennms.name}"
+    pg_ipaddr    = local.pg_ipaddr
+    pg_user      = local.pg_user
     pg_passwd    = var.pg_passwd
   }
 }
