@@ -94,7 +94,7 @@ write_files:
 - owner: root:root
   path: /opt/opennms/etc/featuresBoot.d/cortex.boot
   content: |
-    opennms-plugins-cortex-tss
+    opennms-plugins-cortex-tss wait-for-kar=opennms-cortex-tss-plugin
 
 - owner: root:root
   path: /opt/opennms/deploy/zabbix.xml
@@ -115,11 +115,11 @@ write_files:
   content: |
     #!/bin/bash
 
-    cd /opt/opennms
+    pushd /opt/opennms
     git clone https://github.com/OpenNMS/opennms-zabbix-plugin.git zabbix
-    cd zabbix
+    pushd zabbix
     mvn install -DskipTests
-    cd ..
+    popd && popd
 
 - owner: root:root
   permissions: '0755'
